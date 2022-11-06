@@ -15,24 +15,23 @@ datasource db {
 }
 
 model Pool {
-  id        String   @id @default(cuid())
-  title     String
-  code      String   @unique
-  createdAt DateTime @default(now())
-  ownerId   String?
-
+  id           String        @id @default(cuid())
+  title        String
+  code         String        @unique
+  createdAt    DateTime      @default(now())
+  ownerId      String?
   participants Participant[]
   owner        User?         @relation(fields: [ownerId], references: [id])
 }
 
 model Participant {
-  id     String @id @default(cuid())
+  id      String  @id @default(cuid())
+  guesses Guess[]
+
+  user   User   @relation(fields: [userId], references: [id])
+  pool   Pool   @relation(fields: [poolId], references: [id])
   userId String
   poolId String
-
-  guesses Guess[]
-  user    User    @relation(fields: [userId], references: [id])
-  pool    Pool    @relation(fields: [poolId], references: [id])
 
   @@unique([userId, poolId])
 }
@@ -41,11 +40,12 @@ model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
+  googleId  String?  @unique
   avatarUrl String?
   createdAt DateTime @default(now())
 
-  participantAt Participant[]
-  ownPools      Pool[]
+  participatingAt Participant[]
+  ownPools        Pool[]
 }
 
 model Game {
@@ -53,8 +53,7 @@ model Game {
   date                  DateTime
   firstTeamCountryCode  String
   secondTeamCountryCode String
-
-  guesses Guess[]
+  guesses               Guess[]
 }
 
 model Guess {
@@ -62,9 +61,11 @@ model Guess {
   firstTeamPoints  Int
   secondTeamPoints Int
   createdAt        DateTime @default(now())
-  gameId           String
-  participantId    String
 
-  participant Participant @relation(fields: [participantId], references: [id])
-  game        Game        @relation(fields: [gameId], references: [id])
+  game          Game        @relation(fields: [gameId], references: [id])
+  participant   Participant @relation(fields: [participantId], references: [id])
+  gameId        String
+  participantId String
+
+  @@unique([participantId, gameId])
 }
